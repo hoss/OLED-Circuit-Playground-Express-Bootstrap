@@ -6,7 +6,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // CONFIG
-const bool WAIT_FOR_SERIAL = false;
+const bool WAIT_FOR_SERIAL = false;  // pause app until serial monitor is connected
 const String APP_VERSION = "0.1";    // the version of this app
 const String APP_NAME = "Bootstrap"; // the name of this app
 long neoPixelColour = 0x00FF9D;
@@ -36,6 +36,7 @@ void setup()
   CircuitPlayground.begin(neoPixelBrightness);
   pinMode(AUDIBLE_OUTPUT_PIN, OUTPUT);
   initSerialAndDisplay();
+  randomizeSeed();
 }
 
 void loop()
@@ -50,6 +51,7 @@ void handleLeftButtonRelease()
 {
   trace("handleLeftButtonRelease");
   neoPixelColour = random(0x000000, 0xFFFFFF);
+  trace(String(neoPixelColour, HEX));
 }
 
 void spinLEDs(unsigned int ledDuration)
@@ -102,8 +104,22 @@ void checkForLeftButtonRelease()
     trace("waiting for leftButton release");
     while (CircuitPlayground.leftButton())
       ;
+    trace("leftButton has been release");
     handleLeftButtonRelease();
   }
+}
+
+void randomizeSeed()
+{
+  byte pin = A3;
+  analogReadResolution(12);
+  pinMode(pin, INPUT);
+  digitalWrite(pin, LOW); // disable internal pullup
+  delay(150);
+  unsigned int floatingInput = analogRead(pin);
+  digitalWrite(pin, HIGH); // enable internal pullup
+  randomSeed(floatingInput);
+  analogReadResolution(10);
 }
 
 void traceToDisplay(String msg)
@@ -221,7 +237,7 @@ void initSerialAndDisplay()
     };
   }
   String startUpMsg = APP_NAME + "\nv" + APP_VERSION;
-  traceToSerial(APP_NAME);
+  traceToSerial(startUpMsg);
   updateDisplayWithFixedSizeText(startUpMsg, 2);
   delay(1200);
 }
