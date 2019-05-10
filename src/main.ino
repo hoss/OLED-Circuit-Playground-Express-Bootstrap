@@ -22,8 +22,8 @@ unsigned int activeNeoPixel = 0;
 // DISPLAY
 const bool USE_OLED = true;
 const bool UPSIDE_DOWN_DISPLAY = false;
-const bool DISPLAY_SHOULD_SLEEP = true;
-const long SLEEP_DISPLAY_AFTER_DURATION = 3000;
+const bool DISPLAY_SHOULD_SLEEP = false;
+const long SLEEP_DISPLAY_AFTER_DURATION = 9000;
 const bool SHOW_ADAFRUIT_LOGO_ON_DISPLAY_STARTUP = false;
 
 // INTERNAL
