@@ -9,6 +9,7 @@
 const bool WAIT_FOR_SERIAL = false;
 const String APP_VERSION = "0.1";    // the version of this app
 const String APP_NAME = "Bootstrap"; // the name of this app
+long neoPixelColour = 0x00FF9D;
 
 // PINS
 const byte AUDIBLE_OUTPUT_PIN = A0;
@@ -16,18 +17,14 @@ const byte AUDIBLE_OUTPUT_PIN = A0;
 // NEOPIXELS
 byte neoPixelBrightness = 2; // 0-255
 const byte N_LEDS = 10;      // there 10 NeoPixel LEDs on the CPE
+unsigned int activeNeoPixel = 0;
 
 // DISPLAY
 const bool USE_OLED = true;
 const bool UPSIDE_DOWN_DISPLAY = false;
-const bool DISPLAY_SHOULD_SLEEP = false;
-const long SLEEP_DISPLAY_AFTER_DURATION = 9000;
+const bool DISPLAY_SHOULD_SLEEP = true;
+const long SLEEP_DISPLAY_AFTER_DURATION = 3000;
 const bool SHOW_ADAFRUIT_LOGO_ON_DISPLAY_STARTUP = false;
-
-// BUTTON PINS ON OLED FEATHERWING
-#define BUTTON_A 9
-#define BUTTON_B 6
-#define BUTTON_C 5
 
 // INTERNAL
 const byte OLED_RESET = 5;
@@ -43,21 +40,34 @@ void setup()
 
 void loop()
 {
-  spinLEDs(false);
+  spinLEDs(600);
+  checkForLeftButtonRelease();
+  // right button disabled for use when using I2C
+  checkForDisplaySleep();
 }
 
-void spinLEDs(bool makeNoise)
+void handleLeftButtonRelease()
 {
-  for (int i = 0; i < N_LEDS; i++)
+  trace("handleLeftButtonRelease");
+  neoPixelColour = random(0x000000, 0xFFFFFF);
+}
+
+void spinLEDs(unsigned int ledDuration)
+{
+  bool makeNoise = CircuitPlayground.slideSwitch();
+  int idx = floor(millis() / ledDuration);
+  idx %= N_LEDS;
+  if (idx != activeNeoPixel)
   {
     CircuitPlayground.clearPixels();
-    CircuitPlayground.setPixelColor(i, 0, 255, 160);
+    CircuitPlayground.setPixelColor(idx, neoPixelColour);
     if (makeNoise)
+    {
       digitalWrite(AUDIBLE_OUTPUT_PIN, HIGH);
-    delayMicroseconds(1);
-    if (makeNoise)
+      delayMicroseconds(1);
       digitalWrite(AUDIBLE_OUTPUT_PIN, LOW);
-    delay(100);
+    }
+    activeNeoPixel = idx;
   }
 }
 
@@ -84,6 +94,17 @@ void spinLEDs(bool makeNoise)
  * **********                         *************
  * ************************************************
  */
+
+void checkForLeftButtonRelease()
+{
+  if (CircuitPlayground.leftButton())
+  {
+    trace("waiting for leftButton release");
+    while (CircuitPlayground.leftButton())
+      ;
+    handleLeftButtonRelease();
+  }
+}
 
 void traceToDisplay(String msg)
 {
@@ -164,9 +185,10 @@ void checkForDisplaySleep()
 {
   if (!USE_OLED)
     return;
-  if (DISPLAY_SHOULD_SLEEP && millis() - timeDisplayStarted > SLEEP_DISPLAY_AFTER_DURATION)
+  if (DISPLAY_SHOULD_SLEEP && timeDisplayStarted > 0 && millis() - timeDisplayStarted > SLEEP_DISPLAY_AFTER_DURATION)
   {
     clearDisplay();
+    timeDisplayStarted = 0;
   }
 }
 
