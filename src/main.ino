@@ -7,7 +7,7 @@
 
 // CONFIG
 const bool WAIT_FOR_SERIAL = false;  // pause app until serial monitor is connected
-const String APP_VERSION = "0.1";    // the version of this app
+const String APP_VERSION = "0.2";    // the version of this app
 const String APP_NAME = "Bootstrap"; // the name of this app
 long neoPixelColour = 0x00FF9D;
 
